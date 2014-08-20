@@ -12,7 +12,7 @@
   <segment name="seg1" size="1024" />
   <segment name="seg2" size="1024" />
   <segment name="seg3" size="4096" />
-  <segment name="serial" size="4096" paddr="0x43f90000" />
+  <segment name="serial" size="4096" paddr="0x021E8000" />
 
   <cell name="cell1" program="prog1" user="root" scheduleRate="40">
     <use-segment name="seg1" alias="input" privileges="ro" />

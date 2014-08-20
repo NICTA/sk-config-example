@@ -22,26 +22,20 @@ MUSLC_SYSCALL_TABLE;
 #else
 #define debug_printf(...) 
 
-#define UART_PADDR     0x43f90000
 #define UART_REG(x)    ((volatile unsigned int *)(region_serial_base() + (x)))
-#define UART_SR1_TRDY  13
-#define UART_SR1_RRDY  9
-#define UTXD           0x40
-#define URXD           0x0
-#define USR1           0x94
-#define UCR1           0x80
-
-#define UART_URXD_READY_MASK (1 << 15)
-#define UART_BYTE_MASK       0xFF
 #define BIT(n) (1ul<<(n))
+#define UTXD  0x40 /* UART Transmitter Register */
+#define UART_SR2_TXFIFO_EMPTY 14
+#define USR2  0x98 /* UART Status Register 2 */
 
 void putchar(int c) {
-    while (!(*UART_REG(USR1) & BIT(UART_SR1_TRDY)));
+    /* Wait for serial to become ready. */
+    while (!(*UART_REG(USR2) & BIT(UART_SR2_TXFIFO_EMPTY)));
 
     /* Write out the next character. */
     *UART_REG(UTXD) = c;
     if (c == '\n') {
-      putchar('\r');
+        putchar('\r');
     }
 }
 
@@ -55,16 +49,13 @@ void puts(const char *s) {
 
 
 int cell_main(int argc, char ** argv) {
+    int msg = 0, err;
+
 #if defined(SEL4_DEBUG_KERNEL)
     SET_MUSLC_SYSCALL_TABLE;
-#endif
-
-    int msg = 0, err;
-    
-
-#if defined(SEL4_DEBUG_KERNEL)
     platsupport_serial_setup_bootinfo_failsafe();
 #endif
+
     puts("CELL1 ALIVE\n");
 
     debug_printf("CELL1: waiting for msg on input region\n");
@@ -87,11 +78,11 @@ int cell_main(int argc, char ** argv) {
     if (err) {
         JUMP_TO(0xbad);
     }
-    debug_printf("CELL1: all done successfully. Faulting on address 0x42\n");
+    debug_printf("CELL1: all done successfully. Faulting on address 0x40\n");
 
     puts("CELL1 DONE OK\n");
-    /* Fault on 0x42 to indicate success. */
-    JUMP_TO(0x42);
+    /* Fault on 0x40 to indicate success. */
+    JUMP_TO(0x40);
 
     return 0;
 }
