@@ -1,0 +1,1 @@
+../../../libs/libskc/include/string.h
