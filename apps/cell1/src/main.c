@@ -32,6 +32,12 @@ int cell_main(int argc, char ** argv) {
         JUMP_TO(0xbad);
     }
 
+    /* Write some values to a channel */
+    msg = 1;
+    channel_send(foobar, &msg);
+    msg = 2;
+    channel_send(foobar, &msg);
+
     /* Fault on 0x42 to indicate success. */
     JUMP_TO(0x42);
 

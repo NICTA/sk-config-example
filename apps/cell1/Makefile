@@ -33,7 +33,7 @@ CFILES += ${SK_SOURCE}
 # Libraries required to build the target
 LIBS :=
 
-INCLUDE_DIRS := $(dir ${SK_HEADER})
+INCLUDE_DIRS := $(dir ${SK_HEADER}) ${SOURCE_DIR}/src
 
 include $(SEL4_COMMON)/common.mk
 

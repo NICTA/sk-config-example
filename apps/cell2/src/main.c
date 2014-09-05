@@ -32,6 +32,17 @@ int cell_main(int argc, char ** argv) {
         }
     }
 
+    /* read from the channel */
+    msg = 0;
+    channel_recv(foobar, &msg);
+    if (msg != 1) {
+        JUMP_TO(0xbad);
+    }
+    channel_recv(foobar, &msg);
+    if (msg != 2) {
+        JUMP_TO(0xbad);
+    }
+
     /* Fault on 0x42 to indicate success. */
     JUMP_TO(0x42);
 
