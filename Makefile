@@ -61,14 +61,11 @@ tools/sk-capdl:
 
 ### kernel pre-requisites ###
 
-# Time slices per-second.
-TIMER_TICK:=1000
-
 kernel_elf: ${DOM_SCHEDULE}
-${DOM_SCHEDULE}: ${SK_INPUT} sk-capdl
+${DOM_SCHEDULE}: ${SK_INPUT} sk-capdl .config
 	@echo " [GEN] $(notdir $@)"
 	${Q}mkdir -p "$(dir $@)"
-	${Q}sk-capdl --${ARCH} --xml $< --output config --tick ${TIMER_TICK}
+	${Q}sk-capdl --${ARCH} --xml $< --output config --tick $$(( 1000 / ${CONFIG_TIMER_TICK_MS} ))
 	${Q}mv -f config.c "$@"
 
 ### User-space pre-requisites ###
