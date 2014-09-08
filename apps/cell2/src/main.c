@@ -76,8 +76,19 @@ int cell_main(int argc, char ** argv) {
             break;
         }
     }
-
     debug_printf("CELL2: read 0x%x from input region\n",msg);
+
+    /* read from the channel */
+    msg = 0;
+    channel_recv(foobar, &msg);
+    if (msg != 1) {
+        JUMP_TO(0xbad);
+    }
+    channel_recv(foobar, &msg);
+    if (msg != 2) {
+        JUMP_TO(0xbad);
+    }
+
     debug_printf("CELL2: all done successfully. Faulting on address 0x40\n");
 
     puts("CELL2 DONE OK\n");

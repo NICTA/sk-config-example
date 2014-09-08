@@ -78,6 +78,13 @@ int cell_main(int argc, char ** argv) {
     if (err) {
         JUMP_TO(0xbad);
     }
+
+    /* Write some values to a channel */
+    msg = 1;
+    channel_send(foobar, &msg);
+    msg = 2;
+    channel_send(foobar, &msg);
+
     debug_printf("CELL1: all done successfully. Faulting on address 0x40\n");
 
     puts("CELL1 DONE OK\n");

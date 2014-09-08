@@ -13,6 +13,7 @@
   <segment name="seg2" size="1024" />
   <segment name="seg3" size="4096" />
   <segment name="serial" size="4096" paddr="0x021E8000" />
+  <channel name="foobar" from="cell1" to="cell2" msgsize="4" slots="64" overwrite="yes" />
 
   <cell name="cell1" program="prog1" user="root" scheduleRate="40">
     <use-segment name="seg1" alias="input" privileges="ro" />

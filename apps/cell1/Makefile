@@ -37,7 +37,7 @@ CFILES += ${SK_SOURCE}
 # (needed only with a debug kernel for debug_printf)
 LIBS := muslc sel4muslcsys sel4platsupport
 
-INCLUDE_DIRS := $(dir ${SK_HEADER})
+INCLUDE_DIRS := $(dir ${SK_HEADER}) ${SOURCE_DIR}/src
 
 include $(SEL4_COMMON)/common.mk
 
