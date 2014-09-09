@@ -85,6 +85,9 @@ int cell_main(int argc, char ** argv) {
     _puts("CELL1 ALIVE\n");
     _puts("Please enter input.\n");
 
+    // Read characters from the UART one at a time.  For each character, echo
+    // it locally (converting RET to newline as appropriate), then write it to
+    // the output memory region along with a sequence number.
     while (1) {
             ch[0] = _getchar();
             if (ch[0] == 13)

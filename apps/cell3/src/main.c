@@ -62,6 +62,10 @@ int cell_main(int argc, char ** argv) {
     next = prev = -1;
     ch[1] = '\0';
 
+    // Read character data from the input memory region.  Each character is
+    // paired with a sequence number.  If we read a character paired with a
+    // sequence number greater than the next one that we expect, then print '_'
+    // to indicate the detection of data loss in this case.
     while (1) {
             while (1) {
                     err = region_input_read(ch, 1, 0);

@@ -31,7 +31,12 @@ int cell_main(int argc, char ** argv) {
     platsupport_serial_setup_bootinfo_failsafe();
 #endif
 
-    /* Wait for 0xbeef from cell1. */
+    // Read characater data from the input memory region, filter it (remove
+    // vowels), and then emit it to the output memory region.
+    //
+    // This implementation uses a sequence number paired with each character to
+    // facilitate data loss detection when scheduling interferes with memory
+    // read/write operations in adjacent cells.
     while (1) {
         err = region_input_read(&ch, sizeof(ch), 0);
         err = region_input_read(&next, sizeof(next), sizeof(ch));
