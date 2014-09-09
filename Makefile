@@ -25,7 +25,7 @@ include tools/common/project.mk
 DOM_SCHEDULE = $(abspath $(CONFIG_DOMAIN_SCHEDULE:"%"=%))
 export CAPDL_SPEC = ${BUILD_BASE}/spec.cdl
 
-capdl-loader-experimental: cell1 cell2 sk-capdl parse-capDL ${CAPDL_SPEC}
+capdl-loader-experimental: cell1 cell2 cell3 sk-capdl parse-capDL ${CAPDL_SPEC}
 
 ### CapDL tools targets ###
 
@@ -69,9 +69,10 @@ ${DOM_SCHEDULE}: ${SK_INPUT} sk-capdl .config
 	${Q}mv -f config.c "$@"
 
 ### User-space pre-requisites ###
-${CAPDL_SPEC}: ${SK_INPUT} cell1 cell2 sk-capdl
+${CAPDL_SPEC}: ${SK_INPUT} cell1 cell2 cell3 sk-capdl
 	@echo " [GEN $(notdir $@)"
 	${Q}mkdir -p "$(dir $@)"
 	${Q}sk-capdl --${ARCH} --xml $< --output capdl \
-        --elf ${STAGE_BASE}/bin/cell1 --elf ${STAGE_BASE}/bin/cell2
+        --elf ${STAGE_BASE}/bin/cell1 --elf ${STAGE_BASE}/bin/cell2 --elf ${STAGE_BASE}/bin/cell3
+
 	${Q}mv -f "$(notdir $(<:%.xml=%.cdl))" "$@"

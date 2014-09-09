@@ -10,8 +10,20 @@
 
 #include <autoconf.h>
 #include <cell1/cell1_driver.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #define JUMP_TO(addr) (((void(*)(void))addr)())
+
+#define UART_REG(x)    ((volatile unsigned int *)(region_serial_base() + (x)))
+#define BIT(n) (1ul<<(n))
+#define UTXD  0x40 /* UART Transmitter Register */
+#define UART_SR2_TXFIFO_EMPTY 14
+#define USR2  0x98 /* UART Status Register 2 */
+#define UART_URXD_READY_MASK (1 << 15)
+#define UART_BYTE_MASK       0xFF
+#define UART_SR2_RXFIFO_RDR    0
+#define URXD  0x00 /* UART Receiver Register */
 
 #if defined(SEL4_DEBUG_KERNEL)
 #include <stdio.h>
@@ -22,65 +34,76 @@ MUSLC_SYSCALL_TABLE;
 #else
 #define debug_printf(...) 
 
-#define UART_REG(x)    ((volatile unsigned int *)(region_serial_base() + (x)))
-#define BIT(n) (1ul<<(n))
-#define UTXD  0x40 /* UART Transmitter Register */
-#define UART_SR2_TXFIFO_EMPTY 14
-#define USR2  0x98 /* UART Status Register 2 */
-
-void putchar(int c) {
+void _putchar(int c) {
     /* Wait for serial to become ready. */
     while (!(*UART_REG(USR2) & BIT(UART_SR2_TXFIFO_EMPTY)));
 
     /* Write out the next character. */
     *UART_REG(UTXD) = c;
     if (c == '\n') {
-        putchar('\r');
+        _putchar('\r');
     }
 }
 
-void puts(const char *s) {
+void _puts(const char *s) {
   while (*s) {
-    putchar(*s);
+    _putchar(*s);
     s++;
   }
 }
 #endif
 
+unsigned char _getchar() {
+    uint32_t reg = 0;
+    unsigned char character = 0;
+    
+    while (character == 0) {
+            if (*UART_REG(USR2) & BIT(UART_SR2_RXFIFO_RDR)) {
+                    reg = *UART_REG(URXD);
+
+                    if (reg & UART_URXD_READY_MASK) {
+                            character = reg & UART_BYTE_MASK;
+                    }
+            }
+    }
+
+    return character;
+}
+
 
 int cell_main(int argc, char ** argv) {
-    int msg = 0, err;
+    int err, next;
+    unsigned char ch[2];
+
+    next = 0;
 
 #if defined(SEL4_DEBUG_KERNEL)
     SET_MUSLC_SYSCALL_TABLE;
     platsupport_serial_setup_bootinfo_failsafe();
 #endif
 
-    puts("CELL1 ALIVE\n");
+    _puts("CELL1 ALIVE\n");
+    _puts("Please enter input.\n");
 
-    debug_printf("CELL1: waiting for msg on input region\n");
-    /* Wait til we get 0xcafe from cell2. */
     while (1) {
-        err = region_input_read(&msg, sizeof(msg), 0);
-        if (err) {
-            debug_printf("CELL1: region_input_read failed. Faulting on 0xbad\n");
-            JUMP_TO(0xbad);
-        } else if (msg == 0xcafe) {
-            break;
-        }
+            ch[0] = _getchar();
+            if (ch[0] == 13)
+                    ch[0] = '\n';
+            ch[1] = '\0';
+            _puts(ch);
+
+            next++;
+
+            err = region_output_write(&ch, 1, 0);
+            err = region_output_write(&next, sizeof(next), 1);
+
+            if (err) {
+                    _puts("Error sending, aborting\n");
+                    JUMP_TO(0xbad);
+            }
     }
 
-    debug_printf("CELL1: read 0x%x from input region\n",msg);
-    /* Send 0xbeef back to them. */
-    msg = 0xbeef;
-    debug_printf("CELL1: writing 0x%x to output region\n",msg);
-    err = region_output_write(&msg, sizeof(msg), 0);
-    if (err) {
-        JUMP_TO(0xbad);
-    }
-    debug_printf("CELL1: all done successfully. Faulting on address 0x40\n");
-
-    puts("CELL1 DONE OK\n");
+    _puts("CELL1 DONE OK\n");
     /* Fault on 0x40 to indicate success. */
     JUMP_TO(0x40);
 
