@@ -9,4 +9,10 @@
 #
 
 apps-y += cell1
-cell1: common sk-capdl
+ifdef CONFIG_DEBUG_BUILD
+cell1_libs=common
+else
+cell1_libs=libskc
+endif
+
+cell1: $(cell1_libs) libsk sk-capdl

@@ -29,15 +29,29 @@ TARGETS := ${ME}.bin
 CFILES   := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c)) \
     $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*/*.c))
 
-ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/libskc/arch/${ARCH}/*.S))
+# Always use crt0.S from libskc for _start
+ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(SOURCE_DIR)/../../../../libs/libskc/src/arch/${ARCH}/crt0.S)
 
 CFILES += ${SK_SOURCE}
 
-# Libraries required to build the target
-# (needed only with a debug kernel for debug_printf)
-LIBS := muslc sel4muslcsys sel4platsupport
+# Always link against libsk
+LIBS = sk
 
-INCLUDE_DIRS := $(dir ${SK_HEADER}) ${SOURCE_DIR}/src
+ifdef CONFIG_DEBUG_BUILD
+# The debug build links against libmuslc, for printf() etc. for debug tracing
+LIBS += muslc sel4muslcsys sel4platsupport
+else
+# The non-debug build links instead against just libskc
+LIBS += skc
+# The headers for libskc are placed specially to avoid clashing with those
+# of the libc (see libskc Makefile).
+# Ensure these get included in preference to those of libmuslc
+# because, by the time the cells get built, libmuslc will already have been
+# built and its headers already staged.
+SEL4_INCLUDEDIR := $(STAGE_DIR)/include-libskc $(STAGE_DIR)/include
+endif
+
+INCLUDE_DIRS := $(dir ${SK_HEADER})
 
 include $(SEL4_COMMON)/common.mk
 
