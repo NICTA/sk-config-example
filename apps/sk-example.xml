@@ -9,23 +9,20 @@
   -->
 
 <layout deadline="1000000" runtime="10000">
-  <segment name="seg12" size="4096" />
-  <segment name="seg23" size="4096" />
+  <channel name="chan1" from="cell1" to="cell2" msgsize="1" slots="64" overwrite="yes" />
+  <channel name="chan2" from="cell2" to="cell3" msgsize="1" slots="64" overwrite="yes" />
+
   <segment name="serial1" size="4096" paddr="0x021E8000" />
   <segment name="serial2" size="4096" paddr="0x02020000" />
 
   <cell name="cell1" program="prog1" user="root" scheduleRate="30">
-    <use-segment name="seg12" alias="output" privileges="wo" />
     <use-segment name="serial1" alias="serial" privileges="rw" />
   </cell>
 
   <cell name="cell2" program="prog2" user="root" scheduleRate="40">
-    <use-segment name="seg12" alias="input" privileges="ro" />
-    <use-segment name="seg23" alias="output" privileges="wo" />
   </cell>
 
   <cell name="cell3" program="prog3" user="root" scheduleRate="30">
-    <use-segment name="seg23" alias="input" privileges="ro" />
     <use-segment name="serial2" alias="serial" privileges="rw" />
   </cell>
 </layout>

@@ -48,9 +48,8 @@ void _puts(const char *s) {
 #endif
 
 int cell_main(int argc, char ** argv) {
-    int err, next, prev;
-    unsigned char ch[2];
-    char fmt[64];
+    unsigned char msg;
+    char ch[2];
 
 #if defined(SEL4_DEBUG_KERNEL)
     SET_MUSLC_SYSCALL_TABLE;
@@ -59,28 +58,16 @@ int cell_main(int argc, char ** argv) {
 
     _puts("CELL3 ALIVE\n");
 
-    next = prev = -1;
-    ch[1] = '\0';
-
     // Read character data from the input memory region.  Each character is
     // paired with a sequence number.  If we read a character paired with a
     // sequence number greater than the next one that we expect, then print '_'
     // to indicate the detection of data loss in this case.
     while (1) {
-            while (1) {
-                    err = region_input_read(ch, 1, 0);
-                    err = region_input_read(&next, sizeof(next), 1);
-                    if (err) {
-                            JUMP_TO(0xbad);
-                    } else if (next > prev) {
-                            if (next > prev + 1)
-                                    ch[0] = '_';
+        channel_recv(chan2, &msg);
+        ch[0] = msg;
+        ch[1] = '\0';
 
-                            _puts(ch);
-                            prev = next;
-                            break;
-                    }
-            }
+        _puts(ch);
     }
 
     debug_printf("CELL3: all done successfully. Faulting on address 0x40\n");

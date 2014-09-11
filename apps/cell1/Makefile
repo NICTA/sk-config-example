@@ -29,13 +29,28 @@ TARGETS := ${ME}.bin
 CFILES   := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c)) \
     $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*/*.c))
 
-ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/libskc/arch/${ARCH}/*.S))
+CRT0=${BUILD_DIR}/src/arch/${ARCH}/crt0.S
+
+ASMFILES := ${CRT0}
 
 CFILES += ${SK_SOURCE}
 
-# Libraries required to build the target
-# (needed only with a debug kernel for debug_printf)
-LIBS := muslc sel4muslcsys sel4platsupport
+# Always link against libsk
+LIBS = sk
+
+ifdef CONFIG_DEBUG_BUILD
+# The debug build links against libmuslc, for printf() etc. for debug tracing
+LIBS += muslc sel4muslcsys sel4platsupport
+else
+# The non-debug build links instead against just libskc
+LIBS += skc
+# The headers for libskc are placed specially to avoid clashing with those
+# of the libc (see libskc Makefile).
+# Ensure these get included in preference to those of libmuslc
+# because, by the time the cells get built, libmuslc will already have been
+# built and its headers already staged.
+SEL4_INCLUDEDIR := $(STAGE_DIR)/include-libskc $(STAGE_DIR)/include
+endif
 
 INCLUDE_DIRS := $(dir ${SK_HEADER})
 
@@ -50,3 +65,9 @@ ${SK_SOURCE}: ${SK_INPUT}
 	@echo " [GEN] $(notdir $@)"
 	${Q}mkdir -p $(dir $@)
 	${Q}cd $(dir $@) && sk-capdl --${ARCH} --xml $< --output source --cell ${ME}
+
+# Always use crt0.S from libskc for _start
+${CRT0}: ${LIBSKC_SRC}/arch/${ARCH}/crt0.S
+	@echo " [CP] $@"
+	${Q}mkdir -p $(dir $@)
+	${Q}cp -a $< $@

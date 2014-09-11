@@ -11,7 +11,7 @@
 #include <autoconf.h>
 #include <cell1/cell1_driver.h>
 #include <stdint.h>
-#include <stdio.h>
+// #include <stdio.h>
 
 #define JUMP_TO(addr) (((void(*)(void))addr)())
 
@@ -72,10 +72,8 @@ unsigned char _getchar() {
 
 
 int cell_main(int argc, char ** argv) {
-    int err, next;
-    unsigned char ch[2];
-
-    next = 0;
+    char ch[2];
+    unsigned char msg;
 
 #if defined(SEL4_DEBUG_KERNEL)
     SET_MUSLC_SYSCALL_TABLE;
@@ -89,21 +87,15 @@ int cell_main(int argc, char ** argv) {
     // it locally (converting RET to newline as appropriate), then write it to
     // the output memory region along with a sequence number.
     while (1) {
-            ch[0] = _getchar();
-            if (ch[0] == 13)
-                    ch[0] = '\n';
+            msg = _getchar();
+            if (msg == 13)
+                    msg = '\n';
+
+            channel_send(chan1, &msg);
+
+            ch[0] = msg;
             ch[1] = '\0';
             _puts(ch);
-
-            next++;
-
-            err = region_output_write(&ch, 1, 0);
-            err = region_output_write(&next, sizeof(next), 1);
-
-            if (err) {
-                    _puts("Error sending, aborting\n");
-                    JUMP_TO(0xbad);
-            }
     }
 
     _puts("CELL1 DONE OK\n");

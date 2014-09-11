@@ -22,9 +22,7 @@ MUSLC_SYSCALL_TABLE;
 #endif
 
 int cell_main(int argc, char ** argv) {
-    int err;
-    int next;
-    unsigned char ch;
+    unsigned char msg;
 
 #if defined(SEL4_DEBUG_KERNEL)
     SET_MUSLC_SYSCALL_TABLE;
@@ -38,31 +36,19 @@ int cell_main(int argc, char ** argv) {
     // facilitate data loss detection when scheduling interferes with memory
     // read/write operations in adjacent cells.
     while (1) {
-        err = region_input_read(&ch, sizeof(ch), 0);
-        err = region_input_read(&next, sizeof(next), sizeof(ch));
-        if (err) {
-            JUMP_TO(0xbad);
-        } else if (ch > 0) {
+        channel_recv(chan1, &msg);
 
-            if (ch == 'a' ||
-                ch == 'e' ||
-                ch == 'i' ||
-                ch == 'o' ||
-                ch == 'u')
-                    ch = '*';
+        if (msg > 0) {
+            if (msg == 'a' ||
+                msg == 'e' ||
+                msg == 'i' ||
+                msg == 'o' ||
+                msg == 'u')
+                    msg = '*';
 
-            err = region_output_write(&ch, sizeof(ch), 0);
-            err = region_output_write(&next, sizeof(next), sizeof(ch));
-            if (err) {
-                    JUMP_TO(0xbad);
-            }
+            channel_send(chan2, &msg);
         }
     }
-
-    debug_printf("CELL2: all done successfully. Faulting on address 0x40\n");
-
-    /* Fault on 0x40 to indicate success. */
-    JUMP_TO(0x40);
 
     return 0;
 }
