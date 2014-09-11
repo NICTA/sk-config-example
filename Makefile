@@ -15,6 +15,9 @@ SHELL=/bin/bash
 # Expose the input specification to all Makefiles.
 export SK_INPUT:=$(abspath apps/sk-example.xml)
 
+# Expose libskc src dir to all Makefiles.
+export LIBSKC_SRC:=$(abspath libs/libskc/src/)
+
 lib-dirs := libs/
 
 all: capdl-loader-experimental-image

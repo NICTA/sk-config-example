@@ -29,8 +29,9 @@ TARGETS := ${ME}.bin
 CFILES   := $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*.c)) \
     $(patsubst $(SOURCE_DIR)/%,%,$(wildcard $(SOURCE_DIR)/src/*/*.c))
 
-# Always use crt0.S from libskc for _start
-ASMFILES := $(patsubst $(SOURCE_DIR)/%,%,$(SOURCE_DIR)/../../../../libs/libskc/src/arch/${ARCH}/crt0.S)
+CRT0=${BUILD_DIR}/src/arch/${ARCH}/crt0.S
+
+ASMFILES := ${CRT0}
 
 CFILES += ${SK_SOURCE}
 
@@ -64,3 +65,9 @@ ${SK_SOURCE}: ${SK_INPUT}
 	@echo " [GEN] $(notdir $@)"
 	${Q}mkdir -p $(dir $@)
 	${Q}cd $(dir $@) && sk-capdl --${ARCH} --xml $< --output source --cell ${ME}
+
+# Always use crt0.S from libskc for _start
+${CRT0}: ${LIBSKC_SRC}/arch/${ARCH}/crt0.S
+	@echo " [CP] $@"
+	${Q}mkdir -p $(dir $@)
+	${Q}cp -a $< $@
