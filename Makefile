@@ -64,12 +64,22 @@ tools/sk-capdl:
 
 ### kernel pre-requisites ###
 
-kernel_elf: ${DOM_SCHEDULE}
+kernel_elf: ${DOM_SCHEDULE} check_config
 ${DOM_SCHEDULE}: ${SK_INPUT} sk-capdl .config
 	@echo " [GEN] $(notdir $@)"
 	${Q}mkdir -p "$(dir $@)"
 	${Q}sk-capdl --${ARCH} --xml $< --output config --tick $$(( 1000 / ${CONFIG_TIMER_TICK_MS} ))
 	${Q}mv -f config.c "$@"
+
+PHONY += check_config
+# Check that the number of domains is correctly configured
+check_config: ${SK_INPUT} .config sk-capdl
+	@echo "[CHECK] .config"
+	${Q}DOMS=$$(sk-capdl --xml $< -p); \
+	if [ ${CONFIG_NUM_DOMAINS} -ne $$DOMS ]; then \
+	    echo "CONFIG_NUM_DOMAINS=${CONFIG_NUM_DOMAINS} does not match expected value $$DOMS from ${SK_INPUT}" >&2; \
+	    exit 1;  \
+	fi
 
 ### User-space pre-requisites ###
 ${CAPDL_SPEC}: ${SK_INPUT} cell1 cell2 sk-capdl
