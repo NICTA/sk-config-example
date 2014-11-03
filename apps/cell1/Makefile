@@ -40,7 +40,7 @@ LIBS = sk
 
 ifdef CONFIG_DEBUG_BUILD
 # The debug build links against libmuslc, for printf() etc. for debug tracing
-LIBS += muslc sel4muslcsys sel4platsupport
+LIBS += muslc sel4muslcsys sel4platsupport platsupport
 else
 # The non-debug build links instead against just libskc
 LIBS += skc
