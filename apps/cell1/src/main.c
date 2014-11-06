@@ -33,22 +33,26 @@ MUSLC_SYSCALL_TABLE;
 #else
 #define debug_printf(...) 
 
-void _putchar(int c) {
+int putchar(int c) {
     /* Wait for serial to become ready. */
     while (!(*UART_REG(USR2) & BIT(UART_SR2_TXFIFO_EMPTY)));
 
     /* Write out the next character. */
     *UART_REG(UTXD) = c;
     if (c == '\n') {
-        _putchar('\r');
+        putchar('\r');
     }
+
+    return 1;
 }
 
-void _puts(const char *s) {
+int puts(const char *s) {
   while (*s) {
-    _putchar(*s);
+    putchar(*s);
     s++;
   }
+
+  return 1;
 }
 #endif
 
@@ -79,8 +83,8 @@ int cell_main(int argc, char ** argv) {
     platsupport_serial_setup_bootinfo_failsafe();
 #endif
 
-    _puts("CELL1 ALIVE\n");
-    _puts("Please enter input.\n");
+    puts("CELL1 ALIVE\n");
+    puts("Please enter input.\n");
 
     // Read characters from the UART one at a time.  For each character, echo
     // it locally (converting RET to newline as appropriate), then write it to
@@ -91,13 +95,10 @@ int cell_main(int argc, char ** argv) {
                     msg = '\n';
 
             channel_send(chan1, &msg);
-
-            ch[0] = msg;
-            ch[1] = '\0';
-            _puts(ch);
+            putchar(msg);
     }
 
-    _puts("CELL1 DONE OK\n");
+    puts("CELL1 DONE OK\n");
     /* Fault on 0x40 to indicate success. */
     JUMP_TO(0x40);
 
