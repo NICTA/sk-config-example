@@ -11,7 +11,6 @@
 #include <autoconf.h>
 #include <cell1/cell1_driver.h>
 #include <stdint.h>
-// #include <stdio.h>
 
 #define JUMP_TO(addr) (((void(*)(void))addr)())
 
