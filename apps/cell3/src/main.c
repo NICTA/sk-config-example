@@ -21,6 +21,7 @@ MUSLC_SYSCALL_TABLE;
 #define debug_printf(fmt, ...) printf("%25s:%4d \t" fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 #define debug_printf(...) 
+#endif
 
 #define UART_REG(x)    ((volatile unsigned int *)(region_serial_base() + (x)))
 #define BIT(n) (1ul<<(n))
@@ -28,35 +29,33 @@ MUSLC_SYSCALL_TABLE;
 #define UART_SR2_TXFIFO_EMPTY 14
 #define USR2  0x98 /* UART Status Register 2 */
 
-void _putchar(int c) {
+void cell_putchar(int c) {
     /* Wait for serial to become ready. */
     while (!(*UART_REG(USR2) & BIT(UART_SR2_TXFIFO_EMPTY)));
 
     /* Write out the next character. */
     *UART_REG(UTXD) = c;
     if (c == '\n') {
-        _putchar('\r');
+        cell_putchar('\r');
     }
 }
 
-void _puts(const char *s) {
+void cell_puts(const char *s) {
   while (*s) {
-    _putchar(*s);
+    cell_putchar(*s);
     s++;
   }
 }
-#endif
 
 int cell_main(int argc, char ** argv) {
     unsigned char msg;
-    char ch[2];
 
 #if defined(SEL4_DEBUG_KERNEL)
     SET_MUSLC_SYSCALL_TABLE;
     platsupport_serial_setup_bootinfo_failsafe();
 #endif
 
-    _puts("CELL3 ALIVE\n");
+    cell_puts("CELL3 ALIVE\n");
 
     // Read character data from the input memory region.  Each character is
     // paired with a sequence number.  If we read a character paired with a
@@ -64,15 +63,12 @@ int cell_main(int argc, char ** argv) {
     // to indicate the detection of data loss in this case.
     while (1) {
         channel_recv(chan2, &msg);
-        ch[0] = msg;
-        ch[1] = '\0';
-
-        _puts(ch);
+        cell_putchar(msg);
     }
 
     debug_printf("CELL3: all done successfully. Faulting on address 0x40\n");
 
-    _puts("CELL3 DONE OK\n");
+    cell_puts("CELL3 DONE OK\n");
 
     /* Fault on 0x40 to indicate success. */
     JUMP_TO(0x40);

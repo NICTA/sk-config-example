@@ -32,31 +32,31 @@ MUSLC_SYSCALL_TABLE;
 #define debug_printf(fmt, ...) printf("%25s:%4d \t" fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else
 #define debug_printf(...) 
+#endif
 
-int putchar(int c) {
+int cell_putchar(int c) {
     /* Wait for serial to become ready. */
     while (!(*UART_REG(USR2) & BIT(UART_SR2_TXFIFO_EMPTY)));
 
     /* Write out the next character. */
     *UART_REG(UTXD) = c;
     if (c == '\n') {
-        putchar('\r');
+        cell_putchar('\r');
     }
 
     return 1;
 }
 
-int puts(const char *s) {
+int cell_puts(const char *s) {
   while (*s) {
-    putchar(*s);
+    cell_putchar(*s);
     s++;
   }
 
   return 1;
 }
-#endif
 
-unsigned char _getchar() {
+unsigned char cell_getchar() {
     uint32_t reg = 0;
     unsigned char character = 0;
     
@@ -73,7 +73,6 @@ unsigned char _getchar() {
     return character;
 }
 
-
 int cell_main(int argc, char ** argv) {
     char ch[2];
     unsigned char msg;
@@ -83,22 +82,22 @@ int cell_main(int argc, char ** argv) {
     platsupport_serial_setup_bootinfo_failsafe();
 #endif
 
-    puts("CELL1 ALIVE\n");
-    puts("Please enter input.\n");
+    cell_puts("CELL1 ALIVE\n");
+    cell_puts("Please enter input.\n");
 
     // Read characters from the UART one at a time.  For each character, echo
     // it locally (converting RET to newline as appropriate), then write it to
     // the output memory region along with a sequence number.
     while (1) {
-            msg = _getchar();
+            msg = cell_getchar();
             if (msg == 13)
                     msg = '\n';
 
             channel_send(chan1, &msg);
-            putchar(msg);
+            cell_putchar(msg);
     }
 
-    puts("CELL1 DONE OK\n");
+    cell_puts("CELL1 DONE OK\n");
     /* Fault on 0x40 to indicate success. */
     JUMP_TO(0x40);
 
